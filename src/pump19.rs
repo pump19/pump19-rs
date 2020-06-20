@@ -1,3 +1,8 @@
+// Copyright (c) 2020 Kevin Perry <perry at pump19 dot eu>
+//
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+
 use std::fs;
 use std::path::Path;
 
@@ -98,6 +103,7 @@ impl From<&str> for GolemCommand {
         }
     }
 }
+
 struct CommandHandler {
     triggers: Regex,
     database: tokio_postgres::Client,

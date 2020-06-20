@@ -1,7 +1,10 @@
 [package]
 name = "pump19-rs"
 version = "0.1.0"
+repository = "https://github.com/pump19/pump19-rs"
 authors = ["Kevin Perry"]
+license = "MIT"
+license-file = "LICENSE"
 edition = "2018"
 
 [dependencies]

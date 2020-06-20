@@ -1,3 +1,8 @@
+// Copyright (c) 2020 Kevin Perry <perry at pump19 dot eu>
+//
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+
 mod pump19;
 
 use anyhow::Result;
