@@ -1,0 +1,26 @@
+name: Rust
+
+on:
+  push:
+    branches:
+      - trunk
+  pull_request:
+    branches:
+      - trunk
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --release
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: release
+        path: target/release/pump19-rs
