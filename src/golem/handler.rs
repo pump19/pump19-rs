@@ -49,7 +49,7 @@ impl CommandHandler {
         client.identify()?;
 
         let codefall = CodefallHandler::new().await?;
-        let announce = env::var("PUMP19_CODEFALL_ANNOUNCE")?
+        let announce = env::var("PUMP19_CODEFALL_CHANNELS")?
             .split(',')
             .map(|c| c.to_owned())
             .collect();
