@@ -9,6 +9,7 @@ use anyhow::Result;
 use futures::{stream, StreamExt};
 use irc::client::prelude::{
     Client as IrcClient, Command as IrcCommand, Config as IrcConfig, Message as IrcMessage, Prefix,
+    Response,
 };
 use log::{debug, error, info};
 use regex::Regex;
@@ -88,13 +89,22 @@ impl CommandHandler {
 
                 Message::IRC(message) => {
                     debug!("Received IRC message: {}", message);
-                    if let (
-                        Some(Prefix::Nickname(nickname, _, _)),
-                        IrcCommand::PRIVMSG(channel, message),
-                    ) = (message.prefix, message.command)
-                    {
-                        self.process_privmsg(&nickname, &channel, &message).await?;
-                    }
+
+                    match (message.prefix, message.command) {
+                        // we've joined a channel and received the NAMES response
+                        (_, IrcCommand::Response(Response::RPL_ENDOFNAMES, channels)) => self
+                            .client
+                            .send_privmsg(&channels[1], "I Am Just Clay, And I Listen")?,
+
+                        // we've seen a PRIVMSG by somebody with a nickname
+                        (
+                            Some(Prefix::Nickname(ref nickname, _, _)),
+                            IrcCommand::PRIVMSG(ref channel, ref message),
+                        ) => self.process_privmsg(nickname, channel, message).await?,
+
+                        // we don't care about any of the others for now
+                        _ => (),
+                    };
                 }
             }
         }
