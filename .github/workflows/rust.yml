@@ -30,14 +30,15 @@ jobs:
       uses: actions/checkout@v2
     - name: Create codefall table
       run: >
-        psql -d $DATABASE_URL -a -c
+        psql -d $DATABASE_URL -c
         'CREATE TABLE codefall_unclaimed(
           cid         integer,
           description text,
           code_type   text,
           user_name   text,
           key         character(6)
-        );'
+        );
+        \d codefall_unclaimed;'
 
     - name: Build release configuration
       run: cargo build --release
