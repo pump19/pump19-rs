@@ -28,7 +28,18 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-    - name: Build
+    - name: Create codefall table
+      run: >
+        psql -U pump19 -d pump19 -a -c
+        'CREATE TABLE codefall_unclaimed(
+          cid         integer,
+          description text,
+          code_type   text,
+          user_name   text,
+          key         character(6)
+        );'
+
+    - name: Build release configuration
       run: cargo build --release
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
