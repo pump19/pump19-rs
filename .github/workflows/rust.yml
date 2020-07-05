@@ -14,6 +14,16 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      pg:
+        image: postgres:alpine
+        env:
+          POSTGRES_USER: pump19
+          POSTGRES_PASSWORD: pump19
+
+    env:
+      DATABASE_URL: "postgresql://pump19:pump19@localhost:5432/pump19"
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
