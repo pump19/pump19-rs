@@ -30,7 +30,7 @@ jobs:
       uses: actions/checkout@v2
     - name: Create codefall table
       run: >
-        psql -U pump19 -d pump19 -a -c
+        psql -h localhost -U pump19 -d pump19 -a -c
         'CREATE TABLE codefall_unclaimed(
           cid         integer,
           description text,
