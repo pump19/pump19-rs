@@ -1,4 +1,6 @@
 # Pump19
+![Rust](https://github.com/pump19/pump19-rs/workflows/Rust/badge.svg)
+
 ## Configuration
 Pump19 is configured exclusively through **environment variables** as suggested by [The Twelve Factor App](https://12factor.net/).
 
