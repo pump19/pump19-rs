@@ -23,11 +23,8 @@ const CONFIG_VARS: &[&str] = &[
 
 pub fn verify() -> Result<()> {
     for var in CONFIG_VARS {
-        debug!(
-            "{} = {}",
-            var,
-            env::var(var).map_err(|e| format_err!("{}: {}", e, var))?
-        );
+        let val = env::var(var).map_err(|e| format_err!("{}: {}", e, var))?;
+        debug!("{} = {}", var, val);
     }
 
     Ok(())
