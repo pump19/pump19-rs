@@ -67,27 +67,31 @@ impl CommandHandler {
 
     pub async fn run(&mut self) -> Result<()> {
         #[derive(Debug)]
-        enum Message {
+        enum Event {
             IRC(IrcMessage),
             Codefall(String),
+            Error(irc::error::Error),
         }
 
         let mut stream = stream::select(
             self.codefall
                 .key_stream()
                 .await?
-                .map(|c| Message::Codefall(c)),
-            self.client.stream()?.map(|m| Message::IRC(m.unwrap())),
+                .map(|c| Event::Codefall(c)),
+            self.client.stream()?.map(|m| match m {
+                Ok(m) => Event::IRC(m),
+                Err(e) => Event::Error(e),
+            }),
         );
 
-        while let Some(message) = stream.next().await {
-            match message {
-                Message::Codefall(key) => {
+        while let Some(event) = stream.next().await {
+            match event {
+                Event::Codefall(key) => {
                     debug!("Received codefall notification for key: {}", key);
                     self.announce_codefall(&key).await?;
                 }
 
-                Message::IRC(message) => {
+                Event::IRC(message) => {
                     debug!("Received IRC message: {}", message);
 
                     match (message.prefix, message.command) {
@@ -105,6 +109,10 @@ impl CommandHandler {
                         // we don't care about any of the others for now
                         _ => (),
                     };
+                }
+
+                Event::Error(err) => {
+                    error!("Encountered an error: {}", err);
                 }
             }
         }
