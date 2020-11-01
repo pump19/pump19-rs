@@ -123,6 +123,7 @@ impl CommandHandler {
             Command::Help => Some(self.handle_help()),
             Command::Bingo => Some(self.handle_bingo()),
             Command::Codefall(limit) => self.handle_codefall(nickname, limit).await,
+            Command::Multiple(value) => self.handle_multiple(value).await,
 
             Command::Unknown => None,
         } {
@@ -182,5 +183,25 @@ impl CommandHandler {
         }
 
         Ok(())
+    }
+
+    async fn handle_multiple(&self, value: f64) -> Option<String> {
+        if value > 1000.0 {
+            return None;
+        };
+
+        let multiplier = [
+            2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 25.0, 50.0, 100.0,
+        ];
+
+        Some(format!(
+            "Multiples of ${:.2} | {}",
+            value,
+            multiplier
+                .iter()
+                .map(|m| format!("${:.2}", m * value))
+                .collect::<Vec<_>>()
+                .join(" | ")
+        ))
     }
 }
