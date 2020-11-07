@@ -84,11 +84,6 @@ impl CommandHandler {
                     debug!("Received IRC message: {}", message);
 
                     match (message.prefix, message.command) {
-                        // we've joined a channel and received the NAMES response
-                        (_, IrcCommand::Response(Response::RPL_ENDOFNAMES, channels)) => self
-                            .client
-                            .send_privmsg(&channels[1], "I Am Just Clay, And I Listen")?,
-
                         // we've seen a PRIVMSG by somebody with a nickname
                         (
                             Some(Prefix::Nickname(ref nickname, _, _)),
