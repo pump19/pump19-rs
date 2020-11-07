@@ -3,6 +3,8 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
+#![recursion_limit = "256"]
+
 mod golem;
 
 use anyhow::Result;

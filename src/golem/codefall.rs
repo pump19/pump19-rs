@@ -50,13 +50,11 @@ impl CodefallHandler {
         Ok(CodefallHandler { database })
     }
 
-    pub async fn key_stream(&self) -> Result<impl Stream<Item = String>> {
+    pub async fn key_stream(&self) -> Result<impl Stream<Item = Result<String>>> {
         let mut listener = PgListener::from_pool(&self.database).await?;
         listener.listen("codefall").await?;
 
-        Ok(listener
-            .into_stream()
-            .map(|n| n.unwrap().payload().to_owned()))
+        Ok(listener.into_stream().map(|n| Ok(n?.payload().to_owned())))
     }
 
     pub async fn random_entries(&self, user: &str, limit: u32) -> Result<Vec<Code>> {

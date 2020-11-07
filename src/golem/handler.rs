@@ -6,10 +6,9 @@
 use std::env;
 
 use anyhow::Result;
-use futures::{stream, StreamExt};
+use futures::StreamExt;
 use irc::client::prelude::{
-    Client as IrcClient, Command as IrcCommand, Config as IrcConfig, Message as IrcMessage, Prefix,
-    Response,
+    Client as IrcClient, Command as IrcCommand, Config as IrcConfig, Prefix,
 };
 use log::{debug, error, info};
 use regex::Regex;
@@ -66,32 +65,22 @@ impl CommandHandler {
     }
 
     pub async fn run(&mut self) -> Result<()> {
-        #[derive(Debug)]
-        enum Event {
-            IRC(IrcMessage),
-            Codefall(String),
-            Error(irc::error::Error),
-        }
+        let mut codefall = self.codefall.key_stream().await?.fuse();
+        let mut messages = self.client.stream()?;
 
-        let mut stream = stream::select(
-            self.codefall
-                .key_stream()
-                .await?
-                .map(|c| Event::Codefall(c)),
-            self.client.stream()?.map(|m| match m {
-                Ok(m) => Event::IRC(m),
-                Err(e) => Event::Error(e),
-            }),
-        );
+        loop {
+            futures::select_biased! {
+                key = codefall.select_next_some() => {
+                    let key = key.expect("Encountered an SQL error");
 
-        while let Some(event) = stream.next().await {
-            match event {
-                Event::Codefall(key) => {
                     debug!("Received codefall notification for key: {}", key);
+
                     self.announce_codefall(&key).await?;
                 }
 
-                Event::IRC(message) => {
+                message = messages.select_next_some() => {
+                    let message = message.expect("Encountered an IRC error");
+
                     debug!("Received IRC message: {}", message);
 
                     match (message.prefix, message.command) {
@@ -110,14 +99,8 @@ impl CommandHandler {
                         _ => (),
                     };
                 }
-
-                Event::Error(err) => {
-                    error!("Encountered an error: {}", err);
-                }
             }
         }
-
-        Ok(())
     }
 
     async fn process_privmsg(&self, nickname: &str, channel: &str, message: &str) -> Result<()> {
