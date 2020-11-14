@@ -4,12 +4,14 @@
 // https://opensource.org/licenses/MIT
 
 use std::env;
+use std::time::Duration;
 
 use anyhow::Result;
 use futures::StreamExt;
 use irc::client::prelude::{
     Client as IrcClient, Command as IrcCommand, Config as IrcConfig, Prefix,
 };
+use leaky_bucket::LeakyBucket;
 use log::{debug, error, info};
 use regex::Regex;
 
@@ -20,6 +22,7 @@ use super::command::Command;
 pub struct CommandHandler {
     triggers: Regex,
     client: IrcClient,
+    limiter: LeakyBucket,
 
     codefall: CodefallHandler,
     announce: Vec<String>,
@@ -48,6 +51,13 @@ impl CommandHandler {
         let client = IrcClient::from_config(config).await?;
         client.identify()?;
 
+        // Twitch allows 20 messages per 30s
+        let limiter = LeakyBucket::builder()
+            .max(5)
+            .tokens(5)
+            .refill_interval(Duration::from_secs(2))
+            .build()?;
+
         let codefall = CodefallHandler::new().await?;
         let announce = env::var("PUMP19_CODEFALL_CHANNELS")?
             .split(',')
@@ -57,6 +67,7 @@ impl CommandHandler {
         let cmd_hdl = CommandHandler {
             triggers,
             client,
+            limiter,
             codefall,
             announce,
         };
@@ -113,6 +124,7 @@ impl CommandHandler {
 
             Command::Unknown => None,
         } {
+            self.limiter.acquire_one().await?;
             self.client.send_privmsg(channel, response)?;
         }
 
@@ -164,6 +176,7 @@ impl CommandHandler {
         let code = self.codefall.entry(key).await?;
 
         for channel in &self.announce {
+            self.limiter.acquire_one().await?;
             self.client
                 .send_privmsg(channel, format!("Codefall | {}", code))?;
         }
