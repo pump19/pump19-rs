@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Kevin Perry <perry at pump19 dot eu>
+// Copyright (c) 2021 Kevin Perry <perry at pump19 dot eu>
 //
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
@@ -10,7 +10,7 @@ use anyhow::Result;
 use futures::{Stream, StreamExt};
 use log::info;
 use sqlx::{
-    postgres::{PgListener, PgPool},
+    postgres::{PgListener, PgPool, PgPoolOptions},
     query_as,
 };
 
@@ -42,16 +42,16 @@ pub struct CodefallHandler {
 impl CodefallHandler {
     pub async fn new() -> Result<Self> {
         info!("Setting up database connection…");
-        let database = PgPool::builder()
-            .max_size(5)
-            .build(&env::var("PUMP19_CODEFALL_DATABASE")?)
+        let database = PgPoolOptions::new()
+            .max_connections(5)
+            .connect(&env::var("PUMP19_CODEFALL_DATABASE")?)
             .await?;
 
         Ok(CodefallHandler { database })
     }
 
     pub async fn key_stream(&self) -> Result<impl Stream<Item = Result<String>>> {
-        let mut listener = PgListener::from_pool(&self.database).await?;
+        let mut listener = PgListener::connect_with(&self.database).await?;
         listener.listen("codefall").await?;
 
         Ok(listener.into_stream().map(|n| Ok(n?.payload().to_owned())))

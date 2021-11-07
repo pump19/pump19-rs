@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Kevin Perry <perry at pump19 dot eu>
+// Copyright (c) 2021 Kevin Perry <perry at pump19 dot eu>
 //
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT

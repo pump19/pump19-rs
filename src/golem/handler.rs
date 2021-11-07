@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Kevin Perry <perry at pump19 dot eu>
+// Copyright (c) 2021 Kevin Perry <perry at pump19 dot eu>
 //
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
@@ -11,18 +11,17 @@ use futures::StreamExt;
 use irc::client::prelude::{
     Client as IrcClient, Command as IrcCommand, Config as IrcConfig, Prefix,
 };
-use leaky_bucket::LeakyBucket;
+use leaky_bucket::RateLimiter;
 use log::{debug, error, info};
 use regex::Regex;
 
 use super::codefall::CodefallHandler;
 use super::command::Command;
 
-#[derive(Debug)]
 pub struct CommandHandler {
     triggers: Regex,
     client: IrcClient,
-    limiter: LeakyBucket,
+    limiter: RateLimiter,
 
     codefall: CodefallHandler,
     announce: Vec<String>,
@@ -52,11 +51,11 @@ impl CommandHandler {
         client.identify()?;
 
         // Twitch allows 20 messages per 30s
-        let limiter = LeakyBucket::builder()
+        let limiter = RateLimiter::builder()
             .max(5)
-            .tokens(5)
-            .refill_interval(Duration::from_secs(2))
-            .build()?;
+            .initial(5)
+            .interval(Duration::from_secs(2))
+            .build();
 
         let codefall = CodefallHandler::new().await?;
         let announce = env::var("PUMP19_CODEFALL_CHANNELS")?
@@ -124,7 +123,7 @@ impl CommandHandler {
 
             Command::Unknown => None,
         } {
-            self.limiter.acquire_one().await?;
+            self.limiter.acquire_one().await;
             self.client.send_privmsg(channel, response)?;
         }
 
@@ -176,7 +175,7 @@ impl CommandHandler {
         let code = self.codefall.entry(key).await?;
 
         for channel in &self.announce {
-            self.limiter.acquire_one().await?;
+            self.limiter.acquire_one().await;
             self.client
                 .send_privmsg(channel, format!("Codefall | {}", code))?;
         }

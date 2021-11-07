@@ -32,11 +32,11 @@ jobs:
       run: >
         psql -d $DATABASE_URL
         -c 'CREATE TABLE codefall_unclaimed(
-          cid         integer,
-          description text,
-          code_type   text,
-          user_name   text,
-          key         character(6)
+          cid         integer not null,
+          description text not null,
+          code_type   text not null,
+          user_name   text not null,
+          key         character(6) not null
         );'
         -c '\d codefall_unclaimed'
 
