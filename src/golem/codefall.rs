@@ -10,7 +10,7 @@ use anyhow::Result;
 use futures::{Stream, StreamExt};
 use log::info;
 use sqlx::{
-    postgres::{PgListener, PgPool, PgPoolOptions},
+    postgres::{PgListener, PgPool, PgPoolOptions, types::Oid},
     query_as,
 };
 
@@ -67,7 +67,7 @@ WHERE user_name = $1::TEXT
 ORDER BY random()
 LIMIT $2::OID"#,
             user,
-            limit
+            Oid(limit)
         )
         .fetch_all(&self.database)
         .await?;
