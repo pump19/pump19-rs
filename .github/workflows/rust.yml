@@ -8,38 +8,10 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    services:
-      pg:
-        image: postgres:alpine
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_USER: pump19
-          POSTGRES_PASSWORD: pump19
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      DATABASE_URL: "postgresql://pump19:pump19@localhost:5432/pump19"
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-    - name: Create codefall table
-      run: >
-        psql -d $DATABASE_URL
-        -c 'CREATE TABLE codefall_unclaimed(
-          cid         integer not null,
-          description text not null,
-          code_type   text not null,
-          user_name   text not null,
-          key         character(6) not null
-        );'
-        -c '\d codefall_unclaimed'
-
     - name: Build release configuration
       run: cargo build --release
     - name: Upload artifacts
