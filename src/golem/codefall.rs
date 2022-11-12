@@ -60,12 +60,12 @@ impl CodefallHandler {
     pub async fn random_entries(&self, user: &str, limit: u32) -> Result<Vec<Code>> {
         let codes = query_as!(
             Code,
-            r"
-SELECT description, code_type, key
+            r#"
+SELECT description as "description!", code_type as "code_type!", key as "key!"
 FROM codefall_unclaimed
 WHERE user_name = $1::TEXT
 ORDER BY random()
-LIMIT $2::OID",
+LIMIT $2::OID"#,
             user,
             limit
         )
@@ -78,11 +78,11 @@ LIMIT $2::OID",
     pub async fn entry(&self, key: &str) -> Result<Code> {
         let code = query_as!(
             Code,
-            r"
-SELECT description, code_type, key
+            r#"
+SELECT description as "description!", code_type as "code_type!", key as "key!"
 FROM codefall_unclaimed
 WHERE key = $1::TEXT
-LIMIT 1",
+LIMIT 1::OID"#,
             key
         )
         .fetch_one(&self.database)
